@@ -1,0 +1,20 @@
+---
+# Hardware quirks, enabled per host with hardware.quirks: [<name>, ...]. The name describes the fix, the
+# comment names the machine it was needed on. Module options of quirks can break other hardware - enable a
+# quirk only on the machine it is meant for.
+hardware_quirks_catalog:
+  # Lenovo ThinkBook 16p Gen6: the CS35L56 amps request the firmware names without "-spkid1", but
+  # linux-firmware only ships the -spkid1 variants → only the tweeters play (no woofers)
+  cirrus-cs35l56-17aa3921-spkid1:
+    firmware_links:
+      - { link: cirrus/cs35l56-b0-dsp1-misc-17aa3921.wmfw.xz, target: cs35l56-b0-dsp1-misc-17aa3921-spkid1.wmfw.xz }
+      - { link: cirrus/cs35l56-b0-dsp1-misc-17aa3921-amp1.bin.xz, target: cs35l56-b0-dsp1-misc-17aa3921-spkid1-amp1.bin.xz }
+      - { link: cirrus/cs35l56-b0-dsp1-misc-17aa3921-amp2.bin.xz, target: cs35l56-b0-dsp1-misc-17aa3921-spkid1-amp2.bin.xz }
+  # Fujitsu LIFEBOOK E5512: the 4 digital microphones are not detected (SOF digital-mic issue,
+  # https://thesofproject.github.io/latest/getting_started/intel_debug/suggestions.html#digital-mic-issues);
+  # on other Intel SOF machines this breaks the internal microphone
+  sof-dmic-num-4:
+    modprobe: ["options snd_sof_intel_hda_generic dmic_num=4"]
+  # Lenovo ThinkPad E16 Gen 2: Bluetooth unstable with USB autosuspend
+  btusb-no-autosuspend:
+    modprobe: ["options btusb enable_autosuspend=0"]

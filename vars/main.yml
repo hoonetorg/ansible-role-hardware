@@ -1,4 +1,6 @@
 ---
+hardware_firmware_dir: /usr/lib/firmware
+hardware_intel_cpu: "{{ 'GenuineIntel' in ansible_processor | default([]) }}"
 # firmware discovery: every available package whose name matches this regex ...
 hardware_firmware_regex: '(firmware|microcode|^ucode-)'
 # ... except these (regexes on the package name), each for a reason:

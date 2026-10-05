@@ -19,9 +19,15 @@ hardware_driver_packages:
   - libwacom-data
   - fprintd
   - bluez
-  - thermald
   - fwupd
   - iw
 hardware_driver_alternatives: []
 hardware_optional_packages: []
 hardware_guest_packages: [qemu-guest-agent, spice-vdagent]
+# power management (tasks/power.yml): power-profiles-daemon provides the GNOME power mode switch;
+# tuned (default install, disabled) would fight it over the same settings → kept disabled
+hardware_power_packages: [power-profiles-daemon]
+hardware_power_services: [power-profiles-daemon]
+hardware_power_disable: [tuned]
+# Intel only (exits with "unsupported cpu" on AMD)
+hardware_thermal_package: thermald

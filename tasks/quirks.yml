@@ -1,0 +1,92 @@
+---
+# runs always: with no quirks enabled the managed modprobe file is removed again
+- name: Load hardware quirks catalog
+  ansible.builtin.include_vars:
+    file: quirks.yml
+
+- name: Hardware quirks must be known
+  ansible.builtin.assert:
+    that: hardware_final.quirks | difference(hardware_quirks_catalog.keys() | list) | length == 0
+    fail_msg: >-
+      hardware: unknown quirk(s) {{ hardware_final.quirks | difference(hardware_quirks_catalog.keys() | list) }}
+      - known: {{ hardware_quirks_catalog.keys() | list }}
+    quiet: true
+
+- name: Collect enabled quirks
+  ansible.builtin.set_fact:
+    hardware_quirk_links: >-
+      {{ hardware_final.quirks | map('extract', hardware_quirks_catalog)
+         | map(attribute='firmware_links', default=[]) | flatten }}
+    hardware_quirk_modprobe: >-
+      {{ hardware_final.quirks | select('in', hardware_quirks_with_modprobe) | list }}
+  vars:
+    hardware_quirks_with_modprobe: >-
+      {{ hardware_quirks_catalog | dict2items | selectattr('value.modprobe', 'defined')
+         | map(attribute='key') | list }}
+
+# firmware links: only created (a leftover link is harmless); an existing regular file with the link name
+# means the distribution ships it now - it is left alone
+- name: Check firmware link targets
+  ansible.builtin.stat:
+    path: "{{ hardware_firmware_dir }}/{{ item.link | dirname }}/{{ item.target }}"
+  loop: "{{ hardware_quirk_links }}"
+  loop_control:
+    label: "{{ item.link }}"
+  register: hardware_quirk_targets
+
+- name: Firmware link target missing
+  ansible.builtin.debug:
+    msg: >-
+      hardware: {{ item.item.link | dirname }}/{{ item.item.target }} not found in {{ hardware_firmware_dir }}
+      - link {{ item.item.link }} not created
+  loop: "{{ hardware_quirk_targets.results }}"
+  loop_control:
+    label: "{{ item.item.link }}"
+  when: not item.stat.exists
+
+- name: Check existing firmware link names
+  ansible.builtin.stat:
+    path: "{{ hardware_firmware_dir }}/{{ item.link }}"
+    follow: false
+  loop: "{{ hardware_quirk_links }}"
+  loop_control:
+    label: "{{ item.link }}"
+  register: hardware_quirk_names
+
+- name: Firmware shipped by the distribution
+  ansible.builtin.debug:
+    msg: "hardware: {{ item.item.link }} is a regular file now (shipped by the distribution) - quirk link not needed"
+  loop: "{{ hardware_quirk_names.results }}"
+  loop_control:
+    label: "{{ item.item.link }}"
+  when: item.stat.exists and not item.stat.islnk
+
+- name: Create firmware links
+  ansible.builtin.file:
+    path: "{{ hardware_firmware_dir }}/{{ item.0.item.link }}"
+    src: "{{ item.0.item.target }}"
+    state: link
+  loop: "{{ hardware_quirk_targets.results | zip(hardware_quirk_names.results) | list }}"
+  loop_control:
+    label: "{{ item.0.item.link }}"
+  when:
+    - item.0.stat.exists
+    - not (item.1.stat.exists and not item.1.stat.islnk)
+  notify: hardware reboot notice
+
+- name: Write module options of enabled quirks
+  ansible.builtin.template:
+    src: hardware-quirks.conf.j2
+    dest: /etc/modprobe.d/50-hardware-quirks.conf
+    owner: root
+    group: root
+    mode: "0644"
+  when: hardware_quirk_modprobe | length > 0
+  notify: hardware reboot notice
+
+- name: Remove module options file (no quirk with module options enabled)
+  ansible.builtin.file:
+    path: /etc/modprobe.d/50-hardware-quirks.conf
+    state: absent
+  when: hardware_quirk_modprobe | length == 0
+  notify: hardware reboot notice

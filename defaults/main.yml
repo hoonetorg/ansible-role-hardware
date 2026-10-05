@@ -5,8 +5,12 @@ hardware_defaults:
   firmware: true
   # kernel module packages and userspace hardware support (video acceleration, sensors, pen, fingerprint, ...)
   drivers: true
+  # power-profiles-daemon (GNOME power modes), thermald on Intel; tuned is kept disabled
+  power_management: true
   # qemu-guest-agent, spice-vdagent: idle on real hardware, active only in a VM
   guest_agents: true
   extra_packages: []
+  # hardware quirks from vars/quirks.yml to apply on this host (names, e.g. sof-dmic-num-4)
+  quirks: []
   # removed from every list before installing (exact package names)
   exclude_packages: []

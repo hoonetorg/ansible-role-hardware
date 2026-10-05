@@ -1,0 +1,50 @@
+---
+# power-profiles-daemon and tuned change the same settings (CPU EPP, platform_profile) → only ppd runs
+- name: Gather service facts
+  ansible.builtin.service_facts:
+
+- name: Disable conflicting power daemons
+  ansible.builtin.systemd_service:
+    name: "{{ item }}.service"
+    enabled: false
+    state: stopped
+  loop: "{{ hardware_power_disable }}"
+  when: (item ~ '.service') in ansible_facts.services
+
+- name: Install power profiles daemon
+  ansible.builtin.package:
+    name: "{{ hardware_power_packages }}"
+    state: present
+
+- name: Enable and start power profiles daemon
+  ansible.builtin.systemd_service:
+    name: "{{ item }}.service"
+    enabled: true
+    state: started
+  loop: "{{ hardware_power_services }}"
+  when: not ansible_check_mode or (item ~ '.service') in ansible_facts.services
+
+# thermald supports Intel CPUs only; on other CPUs it is kept disabled (no failed service)
+- name: Install thermald (Intel)
+  ansible.builtin.package:
+    name: "{{ hardware_thermal_package }}"
+    state: present
+  when: hardware_intel_cpu
+
+- name: Enable and start thermald (Intel)
+  ansible.builtin.systemd_service:
+    name: "{{ hardware_thermal_package }}.service"
+    enabled: true
+    state: started
+  when:
+    - hardware_intel_cpu
+    - not ansible_check_mode or (hardware_thermal_package ~ '.service') in ansible_facts.services
+
+- name: Disable thermald (not an Intel CPU)
+  ansible.builtin.systemd_service:
+    name: "{{ hardware_thermal_package }}.service"
+    enabled: false
+    state: stopped
+  when:
+    - not hardware_intel_cpu
+    - (hardware_thermal_package ~ '.service') in ansible_facts.services

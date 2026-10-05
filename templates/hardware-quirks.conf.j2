@@ -1,0 +1,9 @@
+# {{ ansible_managed }}
+# hardware quirks enabled for this host (ansible-role-hardware, hardware.quirks)
+{% for quirk in hardware_quirk_modprobe %}
+
+# {{ quirk }}
+{% for line in hardware_quirks_catalog[quirk].modprobe %}
+{{ line }}
+{% endfor %}
+{% endfor %}

@@ -70,6 +70,15 @@
   ansible.builtin.include_tasks: drivers.yml
   when: hardware_final.drivers
 
+- name: Set up power management
+  ansible.builtin.include_tasks: power.yml
+  when:
+    - hardware_final.power_management
+    - hardware_power_packages is defined
+
+- name: Apply hardware quirks
+  ansible.builtin.include_tasks: quirks.yml
+
 - name: Install VM guest agents
   ansible.builtin.package:
     name: "{{ hardware_guest_list }}"
