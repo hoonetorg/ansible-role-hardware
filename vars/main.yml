@@ -1,0 +1,34 @@
+---
+# firmware discovery: every available package whose name matches this regex ...
+hardware_firmware_regex: '(firmware|microcode|^ucode-)'
+# ... except these (regexes on the package name), each for a reason:
+hardware_firmware_deny:
+  # downloads firmware during installation or is a tool to extract downloaded firmware
+  - '^facetimehd-firmware$'
+  - '^bcm20702a1-firmware$'
+  - 'b43'
+  - '^blade[rR][fF]-.*fx3'
+  # interactive license prompt (debconf)
+  - '^firmware-ipw2x00$'
+  - '^firmware-ivtv$'
+  # boot firmware of other platforms (would write into /boot)
+  - '^raspberrypi-'
+  - '^raspi-firmware$'
+  - '^arm-trusted-firmware'
+  - '^crust-firmware'
+  - '^spacemit-'
+  - 'asahi'
+  # belongs to a specific NVIDIA driver version (no NVIDIA driver is installed)
+  - 'nvidia.*gsp'
+  # meta packages of other contexts (Debian live-task-*-firmware pulls in firmware-ipw2x00 with license prompt),
+  # bootloader builds for VMs
+  - '^live-task'
+  - '^grub-'
+  # tools, not firmware (e.g. isight-firmware-tools extracts firmware from Mac OS)
+  - '-tools$'
+  - '^gnome-firmware$'
+  - 'virt-firmware'
+  - '^python3'
+  # development, documentation, debug and source packages
+  - '-(devel|doc|docs|debuginfo|debugsource|source|src|tests)$'
+  - '-debug$'

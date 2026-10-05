@@ -1,0 +1,21 @@
+---
+hardware_pkgmgr: apt
+hardware_firmware_patterns: []
+# firmware-linux: firmware-linux-free + firmware-misc-nonfree + firmware-amd-graphics + microcode
+hardware_firmware_packages: [firmware-linux, alsa-ucm-conf, wireless-regdb]
+# non-free-firmware must be enabled (ansible-role-repo: repo.distribution_nonfree)
+hardware_nonfree_probe: firmware-iwlwifi
+hardware_driver_packages:
+  - intel-media-va-driver-non-free
+  - mesa-va-drivers
+  - mesa-vulkan-drivers
+  - iio-sensor-proxy
+  - libwacom-common
+  - fprintd
+  - bluez
+  - thermald
+  - fwupd
+  - iw
+hardware_driver_alternatives: []
+hardware_optional_packages: []
+hardware_guest_packages: [qemu-guest-agent, spice-vdagent]

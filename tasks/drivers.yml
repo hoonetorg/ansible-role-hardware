@@ -1,0 +1,24 @@
+---
+- name: List installed packages
+  ansible.builtin.command:
+    argv: "{{ ['dpkg-query', '-W', '-f', '${Package}\\n'] if hardware_pkgmgr == 'apt' else ['rpm', '-qa', '--qf', '%{NAME}\\n'] }}"
+  register: hardware_installed
+  changed_when: false
+  check_mode: false
+  when: hardware_driver_alternatives | length > 0
+
+# alternatives: the first package unless one of them is installed already (e.g. the RPM Fusion variant)
+- name: Resolve driver alternatives
+  ansible.builtin.set_fact:
+    hardware_driver_list: >-
+      {{ hardware_driver_list
+         + ([item[0]] if item | intersect(hardware_installed.stdout_lines) | length == 0 else [])
+         | reject('in', hardware_final.exclude_packages) | list }}
+  loop: "{{ hardware_driver_alternatives }}"
+
+- name: Install drivers and hardware support
+  ansible.builtin.package:
+    name: "{{ hardware_driver_list }}"
+    state: present
+  when: hardware_driver_list | length > 0
+  notify: hardware reboot notice

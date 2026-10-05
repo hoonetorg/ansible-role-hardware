@@ -1,0 +1,4 @@
+---
+- name: hardware reboot notice
+  ansible.builtin.debug:
+    msg: "hardware: firmware, microcode or kernel modules changed - a reboot is recommended"

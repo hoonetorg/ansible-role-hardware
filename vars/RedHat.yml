@@ -1,0 +1,18 @@
+---
+# EL (AlmaLinux, Rocky, CentOS Stream); Fedora has its own vars file
+hardware_pkgmgr: dnf
+hardware_firmware_patterns: []
+hardware_firmware_packages: [linux-firmware, alsa-ucm, wireless-regdb]
+hardware_driver_packages:
+  - mesa-vulkan-drivers
+  - iio-sensor-proxy
+  - libwacom-data
+  - fprintd
+  - bluez
+  - thermald
+  - fwupd
+  - iw
+hardware_driver_alternatives: []
+# installed when an enabled repository offers them (RPM Fusion: intel-media-driver)
+hardware_optional_packages: [intel-media-driver, mesa-va-drivers]
+hardware_guest_packages: [qemu-guest-agent, spice-vdagent]

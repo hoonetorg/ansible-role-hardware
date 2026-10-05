@@ -1,0 +1,17 @@
+galaxy_info:
+  author: hoonetorg
+  description: Install all firmware, CPU microcode, hardware drivers and VM guest agents the distribution offers
+  license: Apache-2.0
+  min_ansible_version: "2.15"
+  platforms:
+    - name: opensuse
+      versions: [all]
+    - name: Debian
+      versions: [all]
+    - name: Fedora
+      versions: [all]
+    - name: EL
+      versions: [all]
+  galaxy_tags: [firmware, drivers, hardware, microcode]
+
+dependencies: []

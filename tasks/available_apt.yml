@@ -1,0 +1,20 @@
+---
+- name: Update apt cache
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+  changed_when: false
+
+- name: List available packages (apt)
+  ansible.builtin.command:
+    argv: [apt-cache, pkgnames]
+  register: hardware_search
+  changed_when: false
+  check_mode: false
+
+- name: Available package names (apt)
+  ansible.builtin.set_fact:
+    hardware_available: >-
+      {{ hardware_search.stdout_lines | select('search', hardware_firmware_regex)
+         | union(hardware_search.stdout_lines | select('in', hardware_optional_packages + [hardware_nonfree_probe | default('')]))
+         | list }}

@@ -1,0 +1,27 @@
+---
+# available packages: zypper search (XML) for the firmware names and the optional packages
+hardware_pkgmgr: zypper
+# pattern "hardware": kernel-firmware-all (incl. kernel-firmware-sound with Cirrus), ucode-amd, ucode-intel,
+# ethtool, hwinfo, irqbalance, fcoe-utils
+hardware_firmware_patterns: [hardware]
+hardware_firmware_packages: [alsa-ucm-conf, wireless-regdb]
+hardware_driver_packages:
+  # kernel modules outside kernel-default, e.g. intel-vbtn/intel-hid (tablet mode of convertibles),
+  # btintel_pcie, hp-bioscfg; kernel-default-extra allows loading them (allow_unsupported_modules 1)
+  - kernel-default-extra
+  - kernel-default-optional
+  - intel-media-driver
+  - Mesa-libva
+  - libvulkan_intel
+  - libvulkan_radeon
+  - Mesa-vulkan-device-select
+  - iio-sensor-proxy
+  - libwacom-data
+  - fprintd
+  - bluez
+  - thermald
+  - fwupd
+  - iw
+hardware_driver_alternatives: []
+hardware_optional_packages: []
+hardware_guest_packages: [qemu-guest-agent, spice-vdagent]

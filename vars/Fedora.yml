@@ -1,0 +1,20 @@
+---
+hardware_pkgmgr: dnf
+hardware_firmware_patterns: []
+hardware_firmware_packages: [linux-firmware, "@hardware-support", alsa-ucm, wireless-regdb]
+hardware_driver_packages:
+  - mesa-vulkan-drivers
+  - iio-sensor-proxy
+  - libwacom-data
+  - fprintd
+  - bluez
+  - thermald
+  - fwupd
+  - iw
+# the first one is installed unless one of them is installed already
+# (RPM Fusion replaces the Fedora VA-API drivers with versions that have all codecs)
+hardware_driver_alternatives:
+  - [libva-intel-media-driver, intel-media-driver]
+  - [mesa-va-drivers, mesa-va-drivers-freeworld]
+hardware_optional_packages: []
+hardware_guest_packages: [qemu-guest-agent, spice-vdagent]

@@ -1,0 +1,16 @@
+---
+- name: Search available packages (zypper)
+  ansible.builtin.command:
+    argv: "{{ ['zypper', '-n', '-x', 'search', '-t', 'package', '*firmware*', '*microcode*', 'ucode-*'] + hardware_optional_packages }}"
+  register: hardware_search
+  changed_when: false
+  check_mode: false
+  failed_when: hardware_search.rc not in [0, 104]   # 104: nothing found
+
+- name: Available package names (zypper)
+  ansible.builtin.set_fact:
+    hardware_available: "{{ [solvables] | flatten | map(attribute='@name') | unique | list }}"
+  vars:
+    solvables: >-
+      {{ (hardware_search.stdout | ansible.utils.from_xml).stream['search-result']['solvable-list'].solvable
+         | default([]) }}

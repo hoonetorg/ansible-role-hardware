@@ -1,0 +1,85 @@
+---
+- name: Build final hardware configuration
+  ansible.builtin.set_fact:
+    hardware_final: "{{ hardware_defaults | combine(hardware | default({}), recursive=True) }}"
+
+- name: Find package lists for {{ ansible_distribution }}
+  ansible.builtin.set_fact:
+    hardware_varsfile: "{{ lookup('ansible.builtin.first_found', candidates, errors='ignore') }}"
+  vars:
+    candidates:
+      - "{{ role_path }}/vars/{{ ansible_distribution }}.yml"
+      - "{{ role_path }}/vars/{{ ansible_os_family }}.yml"
+
+- name: Distribution must be supported
+  ansible.builtin.assert:
+    that: hardware_varsfile | length > 0
+    fail_msg: "hardware: {{ ansible_distribution }} ({{ ansible_os_family }}) is not supported (Suse, Debian, Fedora, EL)"
+    quiet: true
+
+- name: Load package lists for {{ ansible_distribution }}
+  ansible.builtin.include_vars:
+    file: "{{ hardware_varsfile }}"
+
+# names of the packages the enabled repositories offer (firmware names + optional packages)
+- name: List available packages
+  ansible.builtin.include_tasks: "available_{{ hardware_pkgmgr }}.yml"
+
+- name: Build package lists
+  ansible.builtin.set_fact:
+    hardware_firmware_list: >-
+      {{ (hardware_firmware_packages
+          + (hardware_available | select('search', hardware_firmware_regex)
+             | reject('search', hardware_firmware_deny | join('|')) | list))
+         | unique | reject('in', hardware_final.exclude_packages) | list }}
+    hardware_driver_list: >-
+      {{ (hardware_driver_packages
+          + (hardware_optional_packages | select('in', hardware_available) | list))
+         | unique | reject('in', hardware_final.exclude_packages) | list }}
+    hardware_guest_list: "{{ hardware_guest_packages | reject('in', hardware_final.exclude_packages) | list }}"
+
+- name: Non-free firmware must be available
+  ansible.builtin.assert:
+    that: hardware_nonfree_probe in hardware_available
+    fail_msg: >-
+      hardware: {{ hardware_nonfree_probe }} is not available - enable the non-free firmware repositories
+      (ansible-role-repo: repo.distribution_nonfree: true)
+    quiet: true
+  when:
+    - hardware_final.firmware
+    - hardware_nonfree_probe is defined
+
+- name: Install firmware patterns
+  community.general.zypper:
+    name: "{{ hardware_firmware_patterns }}"
+    type: pattern
+    state: present
+  when:
+    - hardware_final.firmware
+    - hardware_firmware_patterns | length > 0
+  notify: hardware reboot notice
+
+- name: Install firmware and microcode
+  ansible.builtin.package:
+    name: "{{ hardware_firmware_list }}"
+    state: present
+  when: hardware_final.firmware
+  notify: hardware reboot notice
+
+- name: Install drivers
+  ansible.builtin.include_tasks: drivers.yml
+  when: hardware_final.drivers
+
+- name: Install VM guest agents
+  ansible.builtin.package:
+    name: "{{ hardware_guest_list }}"
+    state: present
+  when:
+    - hardware_final.guest_agents
+    - hardware_guest_list | length > 0
+
+- name: Install extra packages
+  ansible.builtin.package:
+    name: "{{ hardware_final.extra_packages }}"
+    state: present
+  when: hardware_final.extra_packages | length > 0

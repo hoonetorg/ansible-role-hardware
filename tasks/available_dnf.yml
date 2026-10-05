@@ -1,0 +1,11 @@
+---
+- name: Query available packages (dnf)
+  ansible.builtin.command:
+    argv: "{{ ['dnf', '-q', 'repoquery', '--qf', '%{name}\\n', '*firmware*', '*microcode*', '*ucode*'] + hardware_optional_packages }}"
+  register: hardware_search
+  changed_when: false
+  check_mode: false
+
+- name: Available package names (dnf)
+  ansible.builtin.set_fact:
+    hardware_available: "{{ hardware_search.stdout_lines | select | unique | list }}"

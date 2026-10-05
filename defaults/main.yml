@@ -1,0 +1,12 @@
+---
+# Merged (recursively) with the inventory variable `hardware` into `hardware_final`.
+hardware_defaults:
+  # all firmware the enabled repositories offer + CPU microcode (see vars/main.yml for what is left out)
+  firmware: true
+  # kernel module packages and userspace hardware support (video acceleration, sensors, pen, fingerprint, ...)
+  drivers: true
+  # qemu-guest-agent, spice-vdagent: idle on real hardware, active only in a VM
+  guest_agents: true
+  extra_packages: []
+  # removed from every list before installing (exact package names)
+  exclude_packages: []
