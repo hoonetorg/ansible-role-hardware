@@ -3,21 +3,21 @@
   ansible.builtin.set_fact:
     hardware_final: "{{ hardware_defaults | combine(hardware | default({}), recursive=True) }}"
 
-- name: Find package lists for {{ ansible_distribution }}
+- name: Find package lists for {{ ansible_facts.distribution }}
   ansible.builtin.set_fact:
     hardware_varsfile: "{{ lookup('ansible.builtin.first_found', candidates, errors='ignore') }}"
   vars:
     candidates:
-      - "{{ role_path }}/vars/{{ ansible_distribution }}.yml"
-      - "{{ role_path }}/vars/{{ ansible_os_family }}.yml"
+      - "{{ role_path }}/vars/{{ ansible_facts.distribution }}.yml"
+      - "{{ role_path }}/vars/{{ ansible_facts.os_family }}.yml"
 
 - name: Distribution must be supported
   ansible.builtin.assert:
     that: hardware_varsfile | length > 0
-    fail_msg: "hardware: {{ ansible_distribution }} ({{ ansible_os_family }}) is not supported (Suse, Debian, Fedora, EL)"
+    fail_msg: "hardware: {{ ansible_facts.distribution }} ({{ ansible_facts.os_family }}) is not supported (Suse, Debian, Fedora, EL)"
     quiet: true
 
-- name: Load package lists for {{ ansible_distribution }}
+- name: Load package lists for {{ ansible_facts.distribution }}
   ansible.builtin.include_vars:
     file: "{{ hardware_varsfile }}"
 
