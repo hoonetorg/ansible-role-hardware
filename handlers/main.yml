@@ -2,3 +2,6 @@
 - name: hardware reboot notice
   ansible.builtin.debug:
     msg: "hardware: firmware, microcode, kernel modules or quirk files changed - a reboot is recommended"
+
+- name: hardware reload udev rules
+  ansible.builtin.command: udevadm control --reload

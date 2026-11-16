@@ -68,6 +68,7 @@ hardware, so enable a quirk only on the machine it is meant for.
 | `btusb-no-autosuspend` | `options btusb enable_autosuspend=0` (stable Bluetooth) | Lenovo ThinkPad E16 Gen 2 |
 | `libwacom-isdv4-5440` | libwacom device file for the pen digitizer `i2c 056a:5440` (pen settings in GNOME) | Lenovo IdeaPad 5 2-in-1 15AGP11 |
 | `upower-poweroff-early` | UPower powers off at `battery_poweroff_percent` (15), warnings 5 and 10 above | Lenovo ThinkBook 16p Gen6 (battery cuts off at ~3%) |
+| `usb-unmap` | udev rule: TRIM/discard for the listed USB bridges and sticks (`provisioning_mode=unmap`) | any machine, acts only on the listed USB IDs |
 
 ```yaml
 hardware:
@@ -80,10 +81,15 @@ hardware:
 - module options of all enabled quirks go into `/etc/modprobe.d/50-hardware-quirks.conf`; disabling a quirk
   removes its line, no quirk with module options → the file is removed
 - files (`/etc/libwacom`, `/etc/UPower/UPower.conf.d`) are only created; disabling the quirk leaves them
+- USB IDs of `usb-unmap` go into `/etc/udev/rules.d/70-hardware-usb-unmap.rules`; quirk disabled → the file
+  is removed; udev is reloaded, the rule applies when the device is plugged in again
 - an unknown quirk name stops the run
 - takes effect after the next reboot
 
 Finding missing firmware names for a new quirk: `journalctl -k -b | grep 'failed to load'`.
+
+New USB ID for `usb-unmap` (add it only if the device supports UNMAP but has no discard):
+`lsusb` (ID), `lsblk -D /dev/sdX` (DISC-MAX 0B = no discard), `sg_vpd -p lbpv /dev/sdX` (LBPU: 1 = supported).
 
 ## License
 

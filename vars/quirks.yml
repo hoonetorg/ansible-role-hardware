@@ -2,7 +2,7 @@
 # Hardware quirks, enabled per host with hardware.quirks: [<name>, ...]. The name describes the fix, the
 # comment names the machine it was needed on. Module options of quirks can break other hardware - enable a
 # quirk only on the machine it is meant for.
-# kinds: firmware_links (link, target), modprobe (lines), files (path, content)
+# kinds: firmware_links (link, target), modprobe (lines), files (path, content), usb_unmap (USB IDs)
 hardware_quirks_catalog:
   # Lenovo ThinkBook 16p Gen6: the CS35L56 amps request the firmware names without "-spkid1", but
   # linux-firmware only ships the -spkid1 variants → only the tweeters play (no woofers)
@@ -48,3 +48,13 @@ hardware_quirks_catalog:
           PercentageCritical={{ hardware_final.battery_poweroff_percent | int + 5 }}
           PercentageAction={{ hardware_final.battery_poweroff_percent | int }}
           CriticalPowerAction=PowerOff
+  # USB storage that supports UNMAP but does not announce it → no TRIM/discard (lsblk -D shows 0).
+  # Not machine-specific: the rule only acts on the listed USB IDs. One line per device.
+  usb-unmap:
+    usb_unmap:
+      - 152d:0562   # USB-SATA adapter, 4 TB enterprise drive
+      - 2109:0715   # USB-SATA adapter
+      - 152d:0583   # JMS583 NVMe bridge, e.g. ICY BOX IB-1817M-C31
+      - 0bc2:208e   # Seagate Ultra Compact SSD
+      - 0bda:9210   # Orico M.2 enclosure, RTL9210
+      - 090c:1000   # Samsung FIT 256GB

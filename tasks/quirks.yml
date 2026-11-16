@@ -1,5 +1,5 @@
 ---
-# runs always: with no quirks enabled the managed modprobe file is removed again
+# runs always: with no quirks enabled the managed modprobe and udev files are removed again
 - name: Load hardware quirks catalog
   ansible.builtin.include_vars:
     file: quirks.yml
@@ -22,6 +22,9 @@
     hardware_quirk_files: >-
       {{ hardware_final.quirks | map('extract', hardware_quirks_catalog)
          | map(attribute='files', default=[]) | flatten }}
+    hardware_quirk_usb_unmap: >-
+      {{ hardware_final.quirks | map('extract', hardware_quirks_catalog)
+         | map(attribute='usb_unmap', default=[]) | flatten }}
   vars:
     hardware_quirks_with_modprobe: >-
       {{ hardware_quirks_catalog | dict2items | selectattr('value.modprobe', 'defined')
@@ -117,3 +120,21 @@
   loop_control:
     label: "{{ item.path }}"
   notify: hardware reboot notice
+
+# usb_unmap: applies when the device is plugged in again (no reboot)
+- name: Write udev rule for USB TRIM
+  ansible.builtin.template:
+    src: hardware-usb-unmap.rules.j2
+    dest: /etc/udev/rules.d/70-hardware-usb-unmap.rules
+    owner: root
+    group: root
+    mode: "0644"
+  when: hardware_quirk_usb_unmap | length > 0
+  notify: hardware reload udev rules
+
+- name: Remove udev rule for USB TRIM (no quirk with USB IDs enabled)
+  ansible.builtin.file:
+    path: /etc/udev/rules.d/70-hardware-usb-unmap.rules
+    state: absent
+  when: hardware_quirk_usb_unmap | length == 0
+  notify: hardware reload udev rules

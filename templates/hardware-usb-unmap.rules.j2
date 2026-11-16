@@ -1,0 +1,5 @@
+# {{ ansible_managed }}
+# USB storage that supports UNMAP but does not announce it: enable discard (ansible-role-hardware, quirk usb-unmap)
+{% for id in hardware_quirk_usb_unmap %}
+ACTION=="add|change", SUBSYSTEM=="scsi_disk", ATTRS{idVendor}=="{{ id.split(':')[0] }}", ATTRS{idProduct}=="{{ id.split(':')[1] }}", ATTR{provisioning_mode}="unmap"
+{% endfor %}
