@@ -2,6 +2,7 @@
 # Hardware quirks, enabled per host with hardware.quirks: [<name>, ...]. The name describes the fix, the
 # comment names the machine it was needed on. Module options of quirks can break other hardware - enable a
 # quirk only on the machine it is meant for.
+# kinds: firmware_links (link, target), modprobe (lines), files (path, content)
 hardware_quirks_catalog:
   # Lenovo ThinkBook 16p Gen6: the CS35L56 amps request the firmware names without "-spkid1", but
   # linux-firmware only ships the -spkid1 variants → only the tweeters play (no woofers)
@@ -18,3 +19,32 @@ hardware_quirks_catalog:
   # Lenovo ThinkPad E16 Gen 2: Bluetooth unstable with USB autosuspend
   btusb-no-autosuspend:
     modprobe: ["options btusb enable_autosuspend=0"]
+  # Lenovo IdeaPad 5 2-in-1 15AGP11: pen digitizer i2c 056a:5440 is not in libwacom (checked up to 2.20)
+  libwacom-isdv4-5440:
+    files:
+      - path: /etc/libwacom/wacom-isdv4-5440.tablet
+        content: |
+          [Device]
+          Name=Wacom ISDv4 5440
+          ModelName=
+          DeviceMatch=i2c|056a|5440
+          Class=ISDV4
+          Width=13
+          Height=8
+          IntegratedIn=Display;System
+          Styli=@isdv4-aes;
+
+          [Features]
+          Stylus=true
+          Touch=true
+  # Lenovo ThinkBook 16p Gen6: the battery cuts off hard at about 3% → clean power-off earlier.
+  # UPower needs Low > Critical > Action, otherwise it uses its defaults (20/5/2).
+  upower-poweroff-early:
+    files:
+      - path: /etc/UPower/UPower.conf.d/50-hardware-quirk-battery.conf
+        content: |
+          [UPower]
+          PercentageLow={{ hardware_final.battery_poweroff_percent | int + 10 }}
+          PercentageCritical={{ hardware_final.battery_poweroff_percent | int + 5 }}
+          PercentageAction={{ hardware_final.battery_poweroff_percent | int }}
+          CriticalPowerAction=PowerOff

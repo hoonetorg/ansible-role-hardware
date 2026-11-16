@@ -12,5 +12,7 @@ hardware_defaults:
   extra_packages: []
   # hardware quirks from vars/quirks.yml to apply on this host (names, e.g. sof-dmic-num-4)
   quirks: []
+  # quirk upower-poweroff-early: power off at this battery level (percent)
+  battery_poweroff_percent: 15
   # removed from every list before installing (exact package names)
   exclude_packages: []

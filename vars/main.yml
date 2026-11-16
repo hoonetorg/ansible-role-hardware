@@ -29,6 +29,7 @@ hardware_firmware_deny:
   # tools, not firmware (e.g. isight-firmware-tools extracts firmware from Mac OS)
   - '-tools$'
   - '^gnome-firmware$'
+  - '^gnome-firmware-lang$'
   - 'virt-firmware'
   - '^python3'
   # development, documentation, debug and source packages

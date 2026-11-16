@@ -20,7 +20,7 @@ RPM Fusion are picked up as well.
   - firmware bound to an NVIDIA driver version (GSP), tools, -devel/-doc/-debug packages
 - **drivers**: kernel module packages (Leap: `kernel-default-extra` with e.g. `intel-vbtn`/`intel-hid` for
   convertibles, and `kernel-default-optional`), video acceleration (VA-API, Vulkan), `iio-sensor-proxy`,
-  `libwacom`, `fprintd` (no PAM change), `bluez`, `fwupd`, `iw`. On Fedora the VA-API drivers
+  `libwacom`, `fprintd` (no PAM change), `bluez`, `fwupd`, `iw`. Leap: also the test tools `libva-utils` (`vainfo`) and `libwacom-tools`. On Fedora the VA-API drivers
   are skipped when the RPM Fusion variant is installed. No NVIDIA driver, no `broadcom-wl` (it disables the
   open Broadcom drivers).
 - **guest agents**: `qemu-guest-agent`, `spice-vdagent` - idle on real hardware, active in a VM.
@@ -52,6 +52,7 @@ hardware:
   extra_packages: []      # installed in addition
   exclude_packages: []    # exact names removed from all lists
   quirks: []              # hardware quirks for this host, see below
+  battery_poweroff_percent: 15   # only for the quirk upower-poweroff-early
 ```
 
 ## Hardware quirks
@@ -65,6 +66,8 @@ hardware, so enable a quirk only on the machine it is meant for.
 | `cirrus-cs35l56-17aa3921-spkid1` | links the `-spkid1` CS35L56 firmware to the names the driver requests (woofers play) | Lenovo ThinkBook 16p Gen6 |
 | `sof-dmic-num-4` | `options snd_sof_intel_hda_generic dmic_num=4` (4 digital microphones) | Fujitsu LIFEBOOK E5512 |
 | `btusb-no-autosuspend` | `options btusb enable_autosuspend=0` (stable Bluetooth) | Lenovo ThinkPad E16 Gen 2 |
+| `libwacom-isdv4-5440` | libwacom device file for the pen digitizer `i2c 056a:5440` (pen settings in GNOME) | Lenovo IdeaPad 5 2-in-1 15AGP11 |
+| `upower-poweroff-early` | UPower powers off at `battery_poweroff_percent` (15), warnings 5 and 10 above | Lenovo ThinkBook 16p Gen6 (battery cuts off at ~3%) |
 
 ```yaml
 hardware:
@@ -76,6 +79,7 @@ hardware:
   file with the link name, it is left alone and a notice says the quirk is not needed anymore.
 - module options of all enabled quirks go into `/etc/modprobe.d/50-hardware-quirks.conf`; disabling a quirk
   removes its line, no quirk with module options → the file is removed
+- files (`/etc/libwacom`, `/etc/UPower/UPower.conf.d`) are only created; disabling the quirk leaves them
 - an unknown quirk name stops the run
 - takes effect after the next reboot
 

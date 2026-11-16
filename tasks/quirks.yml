@@ -19,6 +19,9 @@
          | map(attribute='firmware_links', default=[]) | flatten }}
     hardware_quirk_modprobe: >-
       {{ hardware_final.quirks | select('in', hardware_quirks_with_modprobe) | list }}
+    hardware_quirk_files: >-
+      {{ hardware_final.quirks | map('extract', hardware_quirks_catalog)
+         | map(attribute='files', default=[]) | flatten }}
   vars:
     hardware_quirks_with_modprobe: >-
       {{ hardware_quirks_catalog | dict2items | selectattr('value.modprobe', 'defined')
@@ -89,4 +92,28 @@
     path: /etc/modprobe.d/50-hardware-quirks.conf
     state: absent
   when: hardware_quirk_modprobe | length == 0
+  notify: hardware reboot notice
+
+# files: only created (not removed when the quirk is disabled)
+- name: Create directories for quirk files
+  ansible.builtin.file:
+    path: "{{ item.path | dirname }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  loop: "{{ hardware_quirk_files }}"
+  loop_control:
+    label: "{{ item.path }}"
+
+- name: Write quirk files
+  ansible.builtin.copy:
+    dest: "{{ item.path }}"
+    content: "{{ item.content }}"
+    owner: root
+    group: root
+    mode: "0644"
+  loop: "{{ hardware_quirk_files }}"
+  loop_control:
+    label: "{{ item.path }}"
   notify: hardware reboot notice

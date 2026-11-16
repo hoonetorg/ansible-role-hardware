@@ -12,11 +12,13 @@ hardware_driver_packages:
   - kernel-default-optional
   - intel-media-driver
   - Mesa-libva
+  - libva-utils
   - libvulkan_intel
   - libvulkan_radeon
   - Mesa-vulkan-device-select
   - iio-sensor-proxy
   - libwacom-data
+  - libwacom-tools
   - fprintd
   - bluez
   - fwupd
